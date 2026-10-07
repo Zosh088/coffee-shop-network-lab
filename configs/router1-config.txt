@@ -1,0 +1,140 @@
+! MikesCoffee-R1 — show running-config
+! Cisco 2911 Integrated Services Router
+! Exported from Cisco Packet Tracer
+
+Building configuration...
+Current configuration : 2286 bytes
+!
+version 15.1
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+service password-encryption
+!
+hostname MikesCoffee-R1
+!
+!
+!
+enable secret 5 $1$mERr$Pq3/lr0agnISq0fxb9TUZ0
+!
+!
+ip dhcp excluded-address 192.168.10.1 192.168.10.20
+ip dhcp excluded-address 192.168.20.1 192.168.20.20
+ip dhcp excluded-address 192.168.30.1 192.168.30.20
+!
+ip dhcp pool MANAGEMENT_OFFICE
+ network 192.168.10.0 255.255.255.0
+ default-router 192.168.10.1
+ dns-server 8.8.8.8
+ip dhcp pool POS
+ network 192.168.20.0 255.255.255.0
+ default-router 192.168.20.1
+ dns-server 8.8.8.8
+ip dhcp pool FREEWIFI
+ network 192.168.30.0 255.255.255.0
+ default-router 192.168.30.1
+ dns-server 8.8.8.8
+!
+!
+!
+ip cef
+no ipv6 cef
+!
+!
+!
+!
+license udi pid CISCO2911/K9 sn FTX152499BF-
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+no ip domain-lookup
+!
+!
+spanning-tree mode pvst
+!
+!
+!
+!
+!
+!
+interface GigabitEthernet0/0
+ description ## TO_ISP ##
+ no ip address
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/1
+ description ## TO_MIKESCOFFEE-SW1 ##
+ no ip address
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/1.10
+ description ## MANAGEMENT_OFFICE_GATEWAY ##
+ encapsulation dot1Q 10
+ ip address 192.168.10.1 255.255.255.0
+!
+interface GigabitEthernet0/1.20
+ description ## POS_GATEWAY ##
+ encapsulation dot1Q 20
+ ip address 192.168.20.1 255.255.255.0
+!
+interface GigabitEthernet0/1.30
+ description ## FREEWIFI_GATEWAY ##
+ encapsulation dot1Q 30
+ ip address 192.168.30.1 255.255.255.0
+ ip access-group GUEST_RESTRICTIONS in
+!
+interface GigabitEthernet0/1.99
+ description ## NETWORK_MANAGEMENT_GATEWAY ##
+ encapsulation dot1Q 99
+ ip address 192.168.99.1 255.255.255.0
+!
+interface GigabitEthernet0/2
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+ip classless
+!
+ip flow-export version 9
+!
+!
+ip access-list extended GUEST_RESTRICTIONS
+ permit udp any eq bootpc any eq bootps
+ deny ip 192.168.30.0 0.0.0.255 192.168.10.0 0.0.0.255
+ deny ip 192.168.30.0 0.0.0.255 192.168.20.0 0.0.0.255
+ deny ip 192.168.30.0 0.0.0.255 192.168.99.0 0.0.0.255
+ permit ip 192.168.30.0 0.0.0.255 any
+!
+banner motd ^C
+Unauthorized Access is Strictly Prohibited.
+^C
+!
+!
+!
+!
+line con 0
+ password 7 <redacted>
+ logging synchronous
+ login
+!
+line aux 0
+!
+line vty 0 4
+ login
+!
+!
+!
+end

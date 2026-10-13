@@ -1,9 +1,11 @@
-! MikesCoffee-R1 — show running-config
+! MikesCoffee-R1 -- show running-config
 ! Cisco 2911 Integrated Services Router
-! Exported from Cisco Packet Tracer
+! Exported from Cisco Packet Tracer 9.0.1 after the hardening pass
+! Secrets and line passwords redacted for public posting
 
 Building configuration...
-Current configuration : 2286 bytes
+
+Current configuration : 3382 bytes
 !
 version 15.1
 no service timestamps log datetime msec
@@ -14,7 +16,7 @@ hostname MikesCoffee-R1
 !
 !
 !
-enable secret 5 $1$mERr$Pq3/lr0agnISq0fxb9TUZ0
+enable secret 5 <redacted>
 !
 !
 ip dhcp excluded-address 192.168.10.1 192.168.10.20
@@ -41,6 +43,8 @@ no ipv6 cef
 !
 !
 !
+username admin privilege 15 secret 5 <redacted>
+!
 !
 license udi pid CISCO2911/K9 sn FTX152499BF-
 !
@@ -53,7 +57,10 @@ license udi pid CISCO2911/K9 sn FTX152499BF-
 !
 !
 !
+!
+ip ssh version 2
 no ip domain-lookup
+ip domain-name zennstudies.local
 !
 !
 spanning-tree mode pvst
@@ -79,11 +86,13 @@ interface GigabitEthernet0/1.10
  description ## MANAGEMENT_OFFICE_GATEWAY ##
  encapsulation dot1Q 10
  ip address 192.168.10.1 255.255.255.0
+ ip access-group OFFICE_RESTRICTIONS in
 !
 interface GigabitEthernet0/1.20
  description ## POS_GATEWAY ##
  encapsulation dot1Q 20
  ip address 192.168.20.1 255.255.255.0
+ ip access-group POS_RESTRICTIONS in
 !
 interface GigabitEthernet0/1.30
  description ## FREEWIFI_GATEWAY ##
@@ -95,6 +104,7 @@ interface GigabitEthernet0/1.99
  description ## NETWORK_MANAGEMENT_GATEWAY ##
  encapsulation dot1Q 99
  ip address 192.168.99.1 255.255.255.0
+ ip access-group MGMT_RESTRICTIONS in
 !
 interface GigabitEthernet0/2
  no ip address
@@ -117,9 +127,27 @@ ip access-list extended GUEST_RESTRICTIONS
  deny ip 192.168.30.0 0.0.0.255 192.168.20.0 0.0.0.255
  deny ip 192.168.30.0 0.0.0.255 192.168.99.0 0.0.0.255
  permit ip 192.168.30.0 0.0.0.255 any
+ip access-list extended OFFICE_RESTRICTIONS
+ permit udp any eq bootpc any eq bootps
+ deny ip 192.168.10.0 0.0.0.255 192.168.20.0 0.0.0.255
+ deny ip 192.168.10.0 0.0.0.255 192.168.30.0 0.0.0.255
+ permit ip 192.168.10.0 0.0.0.255 any
+ip access-list extended POS_RESTRICTIONS
+ permit udp any eq bootpc any eq bootps
+ deny ip 192.168.20.0 0.0.0.255 192.168.10.0 0.0.0.255
+ deny ip 192.168.20.0 0.0.0.255 192.168.30.0 0.0.0.255
+ deny ip 192.168.20.0 0.0.0.255 192.168.99.0 0.0.0.255
+ permit ip 192.168.20.0 0.0.0.255 any
+ip access-list extended MGMT_RESTRICTIONS
+ permit tcp 192.168.99.0 0.0.0.255 192.168.10.0 0.0.0.255 established
+ permit icmp 192.168.99.0 0.0.0.255 192.168.10.0 0.0.0.255 echo-reply
+ permit ip 192.168.99.0 0.0.0.255 host 192.168.99.1
+ deny ip 192.168.99.0 0.0.0.255 any
 !
 banner motd ^C
+
 Unauthorized Access is Strictly Prohibited.
+
 ^C
 !
 !
@@ -133,7 +161,11 @@ line con 0
 line aux 0
 !
 line vty 0 4
- login
+ login local
+ transport input ssh
+line vty 5 15
+ login local
+ transport input ssh
 !
 !
 !

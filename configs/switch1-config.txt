@@ -1,9 +1,11 @@
-! MikesCoffee-SW1 — show running-config
+! MikesCoffee-SW1 -- show running-config
 ! Cisco Catalyst 3560-24PS
-! Exported from Cisco Packet Tracer
+! Exported from Cisco Packet Tracer 9.0.1 after the hardening pass
+! Secrets and line passwords redacted for public posting
 
 Building configuration...
-Current configuration : 3435 bytes
+
+Current configuration : 4475 bytes
 !
 version 12.2(37)SE1
 no service timestamps log datetime msec
@@ -14,7 +16,7 @@ hostname MikesCoffee-SW1
 !
 !
 no profinet
-enable secret 5 $1$mERr$Pq3/lr0agnISq0fxb9TUZ0
+enable secret 5 <redacted>
 !
 !
 !
@@ -23,7 +25,8 @@ enable secret 5 $1$mERr$Pq3/lr0agnISq0fxb9TUZ0
 !
 !
 !
-username admin privilege 15 secret 5 $1$mERr$QEuCP4PPwDBkM2/qQCxo./
+username admin privilege 15 secret 5 <redacted>
+!
 !
 !
 !
@@ -64,6 +67,7 @@ interface FastEthernet0/3
  switchport access vlan 10
  switchport mode access
  spanning-tree portfast
+ shutdown
  spanning-tree bpduguard enable
 !
 interface FastEthernet0/4
@@ -71,6 +75,7 @@ interface FastEthernet0/4
  switchport access vlan 10
  switchport mode access
  spanning-tree portfast
+ shutdown
  spanning-tree bpduguard enable
 !
 interface FastEthernet0/5
@@ -78,6 +83,7 @@ interface FastEthernet0/5
  switchport access vlan 10
  switchport mode access
  spanning-tree portfast
+ shutdown
  spanning-tree bpduguard enable
 !
 interface FastEthernet0/6
@@ -99,6 +105,7 @@ interface FastEthernet0/8
  switchport access vlan 20
  switchport mode access
  spanning-tree portfast
+ shutdown
  spanning-tree bpduguard enable
 !
 interface FastEthernet0/9
@@ -106,6 +113,7 @@ interface FastEthernet0/9
  switchport access vlan 20
  switchport mode access
  spanning-tree portfast
+ shutdown
  spanning-tree bpduguard enable
 !
 interface FastEthernet0/10
@@ -113,6 +121,7 @@ interface FastEthernet0/10
  switchport access vlan 20
  switchport mode access
  spanning-tree portfast
+ shutdown
  spanning-tree bpduguard enable
 !
 interface FastEthernet0/11
@@ -123,38 +132,82 @@ interface FastEthernet0/11
  spanning-tree bpduguard enable
 !
 interface FastEthernet0/12
+ switchport access vlan 999
+ switchport mode access
+ shutdown
 !
 interface FastEthernet0/13
+ switchport access vlan 999
+ switchport mode access
+ shutdown
 !
 interface FastEthernet0/14
+ switchport access vlan 999
+ switchport mode access
+ shutdown
 !
 interface FastEthernet0/15
+ switchport access vlan 999
+ switchport mode access
+ shutdown
 !
 interface FastEthernet0/16
+ switchport access vlan 999
+ switchport mode access
+ shutdown
 !
 interface FastEthernet0/17
+ switchport access vlan 999
+ switchport mode access
+ shutdown
 !
 interface FastEthernet0/18
+ switchport access vlan 999
+ switchport mode access
+ shutdown
 !
 interface FastEthernet0/19
+ switchport access vlan 999
+ switchport mode access
+ shutdown
 !
 interface FastEthernet0/20
+ switchport access vlan 999
+ switchport mode access
+ shutdown
 !
 interface FastEthernet0/21
+ switchport access vlan 999
+ switchport mode access
+ shutdown
 !
 interface FastEthernet0/22
+ switchport access vlan 999
+ switchport mode access
+ shutdown
 !
 interface FastEthernet0/23
+ switchport access vlan 999
+ switchport mode access
+ shutdown
 !
 interface FastEthernet0/24
+ switchport access vlan 999
+ switchport mode access
+ shutdown
 !
 interface GigabitEthernet0/1
  description ## TO_MIKESCOFFEE_R1 ##
+ switchport trunk native vlan 998
  switchport trunk allowed vlan 10,20,30,99
  switchport trunk encapsulation dot1q
  switchport mode trunk
+ switchport nonegotiate
 !
 interface GigabitEthernet0/2
+ switchport access vlan 999
+ switchport mode access
+ shutdown
 !
 interface Vlan1
  no ip address
@@ -173,7 +226,9 @@ ip flow-export version 9
 !
 !
 banner motd ^C
+
 Unauthorized Access is Strictly Prohibited.
+
 ^C
 !
 !
@@ -181,6 +236,7 @@ Unauthorized Access is Strictly Prohibited.
 !
 !
 line con 0
+ exec-timeout 5 0
  password 7 <redacted>
  logging synchronous
  login
@@ -188,9 +244,11 @@ line con 0
 line aux 0
 !
 line vty 0 4
+ exec-timeout 5 0
  login local
  transport input ssh
 line vty 5 15
+ exec-timeout 5 0
  login local
  transport input ssh
 !

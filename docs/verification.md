@@ -48,9 +48,9 @@ How I tested each change. Every hardening step was tested before the configurati
 
 | Test | Expected | Result |
 |---|---|---|
-| `show interfaces trunk` | Gi0/1 shows native VLAN 998; allowed list still `10,20,30,99` | To confirm |
-| Manager PC: ping gateway, SSH to switch and router | Unchanged; all traffic is tagged | To confirm |
-| Release and renew DHCP on a POS or guest device | Still works across the trunk | To confirm |
+| `show interfaces trunk` | Gi0/1 shows native VLAN 998; allowed list still `10,20,30,99` | Pass |
+| Manager PC: ping gateway, SSH to switch and router | Unchanged; all traffic is tagged | Pass |
+| Release and renew DHCP on a POS or guest device | Still works across the trunk | Pass |
 
 ## Commands worth capturing as evidence
 

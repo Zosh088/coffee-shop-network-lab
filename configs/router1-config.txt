@@ -5,7 +5,7 @@
 
 Building configuration...
 
-Current configuration : 3382 bytes
+Current configuration : 3565 bytes
 !
 version 15.1
 no service timestamps log datetime msec
@@ -143,6 +143,9 @@ ip access-list extended MGMT_RESTRICTIONS
  permit icmp 192.168.99.0 0.0.0.255 192.168.10.0 0.0.0.255 echo-reply
  permit ip 192.168.99.0 0.0.0.255 host 192.168.99.1
  deny ip 192.168.99.0 0.0.0.255 any
+ip access-list standard VTY_ADMIN
+ permit 192.168.10.0 0.0.0.255
+ deny any
 !
 banner motd ^C
 
@@ -154,6 +157,7 @@ Unauthorized Access is Strictly Prohibited.
 !
 !
 line con 0
+ exec-timeout 5 0
  password 7 <redacted>
  logging synchronous
  login
@@ -161,9 +165,13 @@ line con 0
 line aux 0
 !
 line vty 0 4
+ access-class VTY_ADMIN in
+ exec-timeout 5 0
  login local
  transport input ssh
 line vty 5 15
+ access-class VTY_ADMIN in
+ exec-timeout 5 0
  login local
  transport input ssh
 !

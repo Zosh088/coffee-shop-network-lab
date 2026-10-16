@@ -2,7 +2,7 @@
 
 Command output captured from the finished lab, to back up the claims in the other docs. Router output is from `MikesCoffee-R1` and switch output is from `MikesCoffee-SW1`. The test steps behind these results are in [`verification.md`](./verification.md).
 
-> ACL hit counters show traffic seen since the counters were last reset, so they reflect a point in time. The pass/fail results for the blocked-traffic tests are recorded in `verification.md`.
+> ACL hit counters show traffic seen since the counters were last reset, so they are a snapshot in time. The pass/fail results for each test are recorded in `verification.md`.
 
 ## Router
 
@@ -16,32 +16,32 @@ Authentication timeout: 120 secs; Authentication retries: 3
 
 ### Access lists, with match counters
 
-What this shows: the DHCP permits are being hit (DHCP works on all three user VLANs), the office VLAN's general permit has carried traffic, and `MGMT_RESTRICTIONS` rule 10 (`established`) matched 30 packets, which is the switch's SSH replies getting back to the office. `VTY_ADMIN` has permitted office sessions and denied others.
+What this shows: every deny rule on the guest, office, POS and management ACLs has matched traffic, which is the blocked-ping tests from [`verification.md`](./verification.md) hitting the rules they were aimed at (8 matches per rule is consistent with two runs of four pings). The DHCP permits have matched, so DHCP works on all three user VLANs. The `established` rule on `MGMT_RESTRICTIONS` matched 30 packets, which is the switch's SSH replies getting back to the office, and `VTY_ADMIN` has both permitted and denied sessions.
 
 ```
-MikesCoffee-R1#sh access-lists
+MikesCoffee-R1#show access-lists
 Extended IP access list GUEST_RESTRICTIONS
     10 permit udp any eq bootpc any eq bootps (4 match(es))
-    20 deny ip 192.168.30.0 0.0.0.255 192.168.10.0 0.0.0.255
-    30 deny ip 192.168.30.0 0.0.0.255 192.168.20.0 0.0.0.255
-    40 deny ip 192.168.30.0 0.0.0.255 192.168.99.0 0.0.0.255
+    20 deny ip 192.168.30.0 0.0.0.255 192.168.10.0 0.0.0.255 (8 match(es))
+    30 deny ip 192.168.30.0 0.0.0.255 192.168.20.0 0.0.0.255 (8 match(es))
+    40 deny ip 192.168.30.0 0.0.0.255 192.168.99.0 0.0.0.255 (8 match(es))
     50 permit ip 192.168.30.0 0.0.0.255 any (1 match(es))
 Extended IP access list OFFICE_RESTRICTIONS
     10 permit udp any eq bootpc any eq bootps (2 match(es))
-    20 deny ip 192.168.10.0 0.0.0.255 192.168.20.0 0.0.0.255
-    30 deny ip 192.168.10.0 0.0.0.255 192.168.30.0 0.0.0.255
+    20 deny ip 192.168.10.0 0.0.0.255 192.168.20.0 0.0.0.255 (8 match(es))
+    30 deny ip 192.168.10.0 0.0.0.255 192.168.30.0 0.0.0.255 (8 match(es))
     40 permit ip 192.168.10.0 0.0.0.255 any (76 match(es))
 Extended IP access list POS_RESTRICTIONS
     10 permit udp any eq bootpc any eq bootps (2 match(es))
-    20 deny ip 192.168.20.0 0.0.0.255 192.168.10.0 0.0.0.255
-    30 deny ip 192.168.20.0 0.0.0.255 192.168.30.0 0.0.0.255
-    40 deny ip 192.168.20.0 0.0.0.255 192.168.99.0 0.0.0.255
+    20 deny ip 192.168.20.0 0.0.0.255 192.168.10.0 0.0.0.255 (8 match(es))
+    30 deny ip 192.168.20.0 0.0.0.255 192.168.30.0 0.0.0.255 (8 match(es))
+    40 deny ip 192.168.20.0 0.0.0.255 192.168.99.0 0.0.0.255 (8 match(es))
     50 permit ip 192.168.20.0 0.0.0.255 any (1 match(es))
 Extended IP access list MGMT_RESTRICTIONS
     10 permit tcp 192.168.99.0 0.0.0.255 192.168.10.0 0.0.0.255 established (30 match(es))
     20 permit icmp 192.168.99.0 0.0.0.255 192.168.10.0 0.0.0.255 echo-reply
     30 permit ip 192.168.99.0 0.0.0.255 host 192.168.99.1
-    40 deny ip 192.168.99.0 0.0.0.255 any
+    40 deny ip 192.168.99.0 0.0.0.255 any (9 match(es))
 Standard IP access list VTY_ADMIN
     10 permit 192.168.10.0 0.0.0.255 (2 match(es))
     20 deny any (32 match(es))

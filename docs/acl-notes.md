@@ -10,6 +10,7 @@ The design goal is that the four networks cannot reach each other except where t
 | `OFFICE_RESTRICTIONS` | Gi0/1.10 in | Office reaches the internet and the management VLAN; no access to POS or guest |
 | `POS_RESTRICTIONS` | Gi0/1.20 in | POS reaches the internet only; no access to office, guest or management |
 | `MGMT_RESTRICTIONS` | Gi0/1.99 in | Management VLAN can only answer the office and talk to its own gateway |
+| `VTY_ADMIN` (standard) | VTY lines on both devices, via `access-class` | Only the office VLAN may open a management session to the router or switch |
 
 The resulting policy, read as "can the row start a connection to the column":
 
@@ -89,6 +90,21 @@ Almost nothing legitimate *starts* in the management VLAN, so this ACL is mostly
 
 There is no DHCP rule here because VLAN 99 uses static addressing only.
 
+## VTY_ADMIN
+
+```
+ip access-list standard VTY_ADMIN
+ permit 192.168.10.0 0.0.0.255
+ deny any
+!
+line vty 0 15
+ access-class VTY_ADMIN in
+```
+
+The four ACLs above control traffic passing *through* the router. They do not control who can open a management session *to* the router or switch. Without `VTY_ADMIN`, a guest could connect to the router's own address on the guest VLAN (192.168.30.1) and attempt an SSH login, because the guest ACL permits any destination outside the three denied subnets.
+
+A standard ACL is enough here because only the source of the connection matters. It is applied with `access-class` on the VTY lines, which is different from `ip access-group` on an interface. It is configured on both devices; on the switch it is defence in depth, since the other ACLs already keep guest and POS traffic away from VLAN 99.
+
 ## Why every other ACL needs a DHCP rule
 
 A device asking for an address does not have one yet, so its DHCP Discover is sent from `0.0.0.0` to `255.255.255.255` (UDP source port 68, destination port 67). That source address is not inside `192.168.30.0/24` or any other subnet-specific rule, so without an explicit permit the packet would fall through to the implicit deny at the end of the ACL, and no device on that VLAN could ever get an address. Rule 1 in each ACL fixes that.
@@ -98,8 +114,8 @@ A device asking for an address does not have one yet, so its DHCP Discover is se
 These are things I noticed on review. None break the lab, and they are listed so the trade-offs are visible.
 
 1. **The DHCP permit is broader than it needs to be.** `permit udp any eq bootpc any eq bootps` matches *any* source and *any* destination with UDP ports 68 to 67. Because it sits above the deny rules, a packet crafted with those ports could slip past them, for example from the guest VLAN to a host in the POS VLAN. A tighter version matches only the Discover itself: `permit udp host 0.0.0.0 eq bootpc host 255.255.255.255 eq bootps`. Unicast renewals are already covered by the final `permit ip` rule.
-2. **Devices can still reach the router's own address on their VLAN.** The guest ACL allows traffic to any destination outside the three denied subnets, and that includes 192.168.30.1, the router itself. So a guest can attempt an SSH login to the router. Authentication still protects it, but the better fix is an `access-class` on the VTY lines that restricts management sessions to the office VLAN. This is listed in the open items of [`security-hardening.md`](./security-hardening.md).
-3. **The office VLAN can reach the entire management VLAN, not just the switch.** Locking this down to a single admin host needs a static address on the Manager PC.
+2. **Devices can still reach the router's own address on their VLAN (mitigated).** The guest ACL allows traffic to any destination outside the three denied subnets, and that includes 192.168.30.1, the router itself, so a guest can still ping it. SSH sessions from outside the office VLAN are now refused by `VTY_ADMIN`.
+3. **The office VLAN can reach the entire management VLAN, not just the switch.** `VTY_ADMIN` also trusts the whole office /24. Locking both down to a single admin host needs a static address on the Manager PC.
 4. **`established` is not real stateful inspection.** It looks at TCP flags on each packet independently, so a crafted packet with the ACK flag set would also match. Proper connection tracking needs reflexive ACLs or a zone-based firewall, both beyond this lab.
 
 ## Testing

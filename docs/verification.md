@@ -52,14 +52,25 @@ How I tested each change. Every hardening step was tested before the configurati
 | Manager PC: ping gateway, SSH to switch and router | Unchanged; all traffic is tagged | Pass |
 | Release and renew DHCP on a POS or guest device | Still works across the trunk | Pass |
 
-## Commands worth capturing as evidence
+## Management session restriction (VTY_ADMIN)
 
-Screenshots or pasted output of these make good proof for the repo. Save them in a `docs/screenshots/` folder and link them here.
+| From | Test | Expected | Result |
+|---|---|---|---|
+| Manager PC | `ssh -l admin 192.168.99.1` | Works | Pass |
+| Manager PC | `ssh -l admin 192.168.99.2` | Works | Pass |
+| Guest laptop | `ssh -l admin 192.168.30.1` | Refused or times out | Pass |
+| POS terminal | `ssh -l admin 192.168.20.1` | Refused or times out | Pass |
+| Router | `show access-lists` | `VTY_ADMIN` shows matches on both the permit and the deny line | Pass |
+| Both devices | `show running-config \| section line` | `access-class VTY_ADMIN in` and `exec-timeout 5 0` on the VTY lines; router console also at 5 minutes | Pass |
 
-```
-show ip ssh
-show access-lists
-show interfaces trunk
-show interfaces status
-show vlan brief
-```
+## Evidence
+
+Output from the following commands is saved in [`evidence.md`](./evidence.md):
+
+- `show ip ssh` (router)
+- `show access-lists` (router)
+- `show interfaces trunk` (switch)
+- `show interfaces status` (switch)
+- `show vlan brief` (switch)
+
+The full final running-configs are in [`/configs`](../configs).

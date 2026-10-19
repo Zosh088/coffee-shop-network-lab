@@ -14,9 +14,9 @@ SSH Enabled - version 2.0
 Authentication timeout: 120 secs; Authentication retries: 3
 ```
 
-### Access lists, with match counters
+### Access lists, with match counters (earlier capture)
 
-What this shows: every deny rule on the guest, office, POS and management ACLs has matched traffic, which is the blocked-ping tests from [`verification.md`](./verification.md) hitting the rules they were aimed at (8 matches per rule is consistent with two runs of four pings). The DHCP permits have matched, so DHCP works on all three user VLANs. The `established` rule on `MGMT_RESTRICTIONS` matched 30 packets, which is the switch's SSH replies getting back to the office, and `VTY_ADMIN` has both permitted and denied sessions.
+Captured before administration moved to the technician laptop, so the rule numbers and the office-to-management rules have since changed. The current policy is in [`acl-notes.md`](./acl-notes.md) and the final rules are in [`configs/router1-config.txt`](../configs/router1-config.txt). This capture is kept because its hit counters show every deny rule matching blocked traffic: 8 matches on each deny line the tests were aimed at (two runs of four pings), and matches on the DHCP permits, the `established` rule and `VTY_ADMIN`.
 
 ```
 MikesCoffee-R1#show access-lists
@@ -68,6 +68,8 @@ Gig0/1      10,20,30,99
 
 ### Port status: used ports up, everything else disabled
 
+The maintenance port (Fa0/15, VLAN 99) is disabled; it is enabled only during maintenance.
+
 ```
 MikesCoffee-SW1#show interfaces status
 Port      Name               Status       Vlan       Duplex  Speed Type
@@ -85,7 +87,7 @@ Fa0/11    ## FREEWIFI_ACCESS connected    30         a-full  a-100 10/100BaseTX
 Fa0/12                       disabled     999        auto    auto  10/100BaseTX
 Fa0/13                       disabled     999        auto    auto  10/100BaseTX
 Fa0/14                       disabled     999        auto    auto  10/100BaseTX
-Fa0/15                       disabled     999        auto    auto  10/100BaseTX
+Fa0/15    ## TECH_MAINTENANC disabled     99         auto    auto  10/100BaseTX
 Fa0/16                       disabled     999        auto    auto  10/100BaseTX
 Fa0/17                       disabled     999        auto    auto  10/100BaseTX
 Fa0/18                       disabled     999        auto    auto  10/100BaseTX
@@ -101,7 +103,7 @@ Gig0/2                       disabled     999        auto    auto  10/100/1000Ba
 
 ### VLAN database: names and port membership
 
-VLANs 99 and 998 list no ports because they have no access ports. VLAN 99 is reached through the trunk and the SVI.
+Captured before the maintenance port (Fa0/15) was moved into VLAN 99. Fa0/15 now appears under VLAN 99 instead of PARKING_LOT. VLAN 998 lists no ports because nothing is assigned to it, and VLAN 99 otherwise has no access ports because it is reached through the trunk and the SVI.
 
 ```
 MikesCoffee-SW1#show vlan brief

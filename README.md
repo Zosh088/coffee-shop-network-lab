@@ -20,7 +20,7 @@ The project had two phases:
 - Router-on-a-stick inter-VLAN routing with dot1Q subinterfaces
 - DHCP pools with excluded ranges for static infrastructure
 - Four named extended ACLs enforcing a full inter-VLAN policy
-- SSHv2-only management with local accounts and 2048-bit RSA keys on both devices, restricted to the office VLAN with a VTY `access-class`
+- SSHv2-only management with named per-person accounts, unique secrets per device and 2048-bit RSA keys, restricted to a single technician host with a VTY `access-class`
 - Layer 2 hardening: PortFast, BPDU Guard, shutdown and parking of unused ports
 - Device hardening: encrypted secrets, MOTD banners, session timeouts, `no ip domain-lookup`
 - Testing and verifying each change before saving it, and committing the lab file to Git after each step
@@ -34,7 +34,7 @@ The project had two phases:
 | Guest Wi-Fi | AccessPoint-PT | Guest wireless |
 | Cloud-PT | n/a | Stand-in for the ISP (not yet configured) |
 
-**End devices:** Manager PC and office printer (VLAN 10), POS terminal and receipt printer (VLAN 20), two guest laptops over Wi-Fi (VLAN 30).
+**End devices:** Manager PC and office printer (VLAN 10), POS terminal and receipt printer (VLAN 20), two guest laptops over Wi-Fi (VLAN 30), and a technician laptop (VLAN 99) on a maintenance port that is shut down except during maintenance.
 
 ## 🔢 VLAN Design
 
@@ -43,7 +43,7 @@ The project had two phases:
 | 10 | MANAGEMENT | Manager PC, office printer | 192.168.10.0/24 |
 | 20 | POS | POS terminal, receipt printer | 192.168.20.0/24 |
 | 30 | FREE_WIFI | Guest Wi-Fi | 192.168.30.0/24 |
-| 99 | NETWORK_MANAGEMENT | Switch management (SVI) | 192.168.99.0/24 |
+| 99 | NETWORK_MANAGEMENT | Switch management (SVI), technician maintenance port | 192.168.99.0/24 |
 | 998 | NATIVE_UNUSED | Trunk native VLAN; carries nothing | none |
 | 999 | PARKING_LOT | Disabled, unassigned ports | none |
 
@@ -51,8 +51,8 @@ Port assignments and design reasoning: [`docs/vlan-design.md`](./docs/vlan-desig
 
 ## 🔐 Security Configuration
 
-- **Remote access:** SSHv2 only on both devices, with Telnet refused. Both use a local `admin` account and a 2048-bit RSA key, and only the office VLAN may open a management session (`VTY_ADMIN` on the VTY lines).
-- **Inter-VLAN policy:** one inbound ACL per VLAN. Guest and POS reach the internet only. Office also reaches the management VLAN, as a deliberate exception so the Manager PC can administer the devices. Management can only answer the office.
+- **Remote access:** SSHv2 only on both devices, with Telnet refused. Named accounts (`tech1`, `tech2`) replace a shared login, each device has its own `enable secret`, and the console requires a login. Only the technician laptop may open a management session (`VTY_ADMIN` on the VTY lines).
+- **Inter-VLAN policy:** one inbound ACL per VLAN. Office, POS and guest reach the internet only, and the management VLAN reaches nothing but its own gateway. No other VLAN can reach management addresses, including the manager's PC.
 - **Layer 2:** PortFast and BPDU Guard on access ports. Unused ports are shut down, and unassigned ones are parked in a dead-end VLAN.
 - **Trunk:** allowed VLANs limited to 10, 20, 30 and 99, native VLAN moved to 998, and DTP negotiation turned off.
 
@@ -93,12 +93,11 @@ The most valuable part came afterwards, when I audited my own work. The network 
 
 See the full list in [`docs/security-hardening.md`](./docs/security-hardening.md#open-items). The main ones:
 
-- [ ] Narrow admin access from the whole office VLAN to a single admin host
-- [ ] Add Cisco port security (sticky MAC) on access ports
+- [ ] Add Cisco port security (sticky MAC) on access ports, and bind the maintenance port to the technician laptop
 - [ ] Add DHCP snooping and Dynamic ARP Inspection
-- [ ] Use unique credentials and per-technician accounts
 - [ ] Finish the ISP side with a default route and NAT
-- [ ] Add a second switch and test EtherChannel and HSRP
+- [ ] Add a second switch and test EtherChannel and HSRP (as a separate lab)
+- [ ] Move from local accounts to centralised authentication (AAA)
 
 ---
 *Built as part of my CCNA certification prep. Feedback welcome; feel free to open an issue or reach out.*

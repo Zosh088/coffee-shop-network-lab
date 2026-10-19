@@ -5,7 +5,6 @@
 
 Building configuration...
 
-Current configuration : 4604 bytes
 !
 version 12.2(37)SE1
 no service timestamps log datetime msec
@@ -25,7 +24,8 @@ enable secret 5 <redacted>
 !
 !
 !
-username admin privilege 15 secret 5 <redacted>
+username tech1 privilege 15 secret 5 <redacted>
+username tech2 privilege 15 secret 5 <redacted>
 !
 !
 !
@@ -147,9 +147,12 @@ interface FastEthernet0/14
  shutdown
 !
 interface FastEthernet0/15
- switchport access vlan 999
+ description ## TECH_MAINTENANCE ##
+ switchport access vlan 99
  switchport mode access
+ spanning-tree portfast
  shutdown
+ spanning-tree bpduguard enable
 !
 interface FastEthernet0/16
  switchport access vlan 999
@@ -225,7 +228,7 @@ ip flow-export version 9
 !
 !
 ip access-list standard VTY_ADMIN
- permit 192.168.10.0 0.0.0.255
+ permit host 192.168.99.10
  deny any
 !
 banner motd ^C
@@ -240,9 +243,8 @@ Unauthorized Access is Strictly Prohibited.
 !
 line con 0
  exec-timeout 5 0
- password 7 <redacted>
  logging synchronous
- login
+ login local
 !
 line aux 0
 !

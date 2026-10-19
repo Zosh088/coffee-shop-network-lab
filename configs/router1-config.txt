@@ -5,7 +5,6 @@
 
 Building configuration...
 
-Current configuration : 3565 bytes
 !
 version 15.1
 no service timestamps log datetime msec
@@ -43,7 +42,8 @@ no ipv6 cef
 !
 !
 !
-username admin privilege 15 secret 5 <redacted>
+username tech1 privilege 15 secret 5 <redacted>
+username tech2 privilege 15 secret 5 <redacted>
 !
 !
 license udi pid CISCO2911/K9 sn FTX152499BF-
@@ -122,29 +122,28 @@ ip flow-export version 9
 !
 !
 ip access-list extended GUEST_RESTRICTIONS
- permit udp any eq bootpc any eq bootps
+ permit udp host 0.0.0.0 eq bootpc host 255.255.255.255 eq bootps
  deny ip 192.168.30.0 0.0.0.255 192.168.10.0 0.0.0.255
  deny ip 192.168.30.0 0.0.0.255 192.168.20.0 0.0.0.255
  deny ip 192.168.30.0 0.0.0.255 192.168.99.0 0.0.0.255
  permit ip 192.168.30.0 0.0.0.255 any
 ip access-list extended OFFICE_RESTRICTIONS
- permit udp any eq bootpc any eq bootps
+ permit udp host 0.0.0.0 eq bootpc host 255.255.255.255 eq bootps
  deny ip 192.168.10.0 0.0.0.255 192.168.20.0 0.0.0.255
  deny ip 192.168.10.0 0.0.0.255 192.168.30.0 0.0.0.255
+ deny ip 192.168.10.0 0.0.0.255 192.168.99.0 0.0.0.255
  permit ip 192.168.10.0 0.0.0.255 any
 ip access-list extended POS_RESTRICTIONS
- permit udp any eq bootpc any eq bootps
+ permit udp host 0.0.0.0 eq bootpc host 255.255.255.255 eq bootps
  deny ip 192.168.20.0 0.0.0.255 192.168.10.0 0.0.0.255
  deny ip 192.168.20.0 0.0.0.255 192.168.30.0 0.0.0.255
  deny ip 192.168.20.0 0.0.0.255 192.168.99.0 0.0.0.255
  permit ip 192.168.20.0 0.0.0.255 any
 ip access-list extended MGMT_RESTRICTIONS
- permit tcp 192.168.99.0 0.0.0.255 192.168.10.0 0.0.0.255 established
- permit icmp 192.168.99.0 0.0.0.255 192.168.10.0 0.0.0.255 echo-reply
  permit ip 192.168.99.0 0.0.0.255 host 192.168.99.1
  deny ip 192.168.99.0 0.0.0.255 any
 ip access-list standard VTY_ADMIN
- permit 192.168.10.0 0.0.0.255
+ permit host 192.168.99.10
  deny any
 !
 banner motd ^C
@@ -158,9 +157,8 @@ Unauthorized Access is Strictly Prohibited.
 !
 line con 0
  exec-timeout 5 0
- password 7 <redacted>
  logging synchronous
- login
+ login local
 !
 line aux 0
 !

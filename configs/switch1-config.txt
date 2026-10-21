@@ -52,6 +52,10 @@ interface FastEthernet0/1
  description ## MANAGEMENT_OFFICE_DEVICES ##
  switchport access vlan 10
  switchport mode access
+ switchport port-security
+ switchport port-security mac-address sticky
+ switchport port-security violation restrict
+ switchport port-security mac-address sticky 0003.E4C2.EB45
  spanning-tree portfast
  spanning-tree bpduguard enable
 !
@@ -59,6 +63,10 @@ interface FastEthernet0/2
  description ## MANAGEMENT_OFFICE_DEVICES ##
  switchport access vlan 10
  switchport mode access
+ switchport port-security
+ switchport port-security mac-address sticky
+ switchport port-security violation restrict
+ switchport port-security mac-address sticky 0007.EC13.76A7
  spanning-tree portfast
  spanning-tree bpduguard enable
 !
@@ -90,6 +98,10 @@ interface FastEthernet0/6
  description ## POS_DEVICES ##
  switchport access vlan 20
  switchport mode access
+ switchport port-security
+ switchport port-security mac-address sticky
+ switchport port-security violation restrict
+ switchport port-security mac-address sticky 000C.CF4D.CAE3
  spanning-tree portfast
  spanning-tree bpduguard enable
 !
@@ -97,6 +109,10 @@ interface FastEthernet0/7
  description ## POS_DEVICES ##
  switchport access vlan 20
  switchport mode access
+ switchport port-security
+ switchport port-security mac-address sticky
+ switchport port-security violation restrict
+ switchport port-security mac-address sticky 0090.2B78.4BBE
  spanning-tree portfast
  spanning-tree bpduguard enable
 !
@@ -150,6 +166,8 @@ interface FastEthernet0/15
  description ## TECH_MAINTENANCE ##
  switchport access vlan 99
  switchport mode access
+ switchport port-security
+ switchport port-security mac-address 0001.96B4.C891
  spanning-tree portfast
  shutdown
  spanning-tree bpduguard enable

@@ -21,7 +21,7 @@ The project had two phases:
 - DHCP pools with excluded ranges for static infrastructure
 - Four named extended ACLs enforcing a full inter-VLAN policy
 - SSHv2-only management with named per-person accounts, unique secrets per device and 2048-bit RSA keys, restricted to a single technician host with a VTY `access-class`
-- Layer 2 hardening: PortFast, BPDU Guard, shutdown and parking of unused ports
+- Layer 2 hardening: PortFast, BPDU Guard, port security (sticky and static MAC), shutdown and parking of unused ports
 - Device hardening: encrypted secrets, MOTD banners, session timeouts, `no ip domain-lookup`
 - Testing and verifying each change before saving it, and committing the lab file to Git after each step
 
@@ -53,7 +53,7 @@ Port assignments and design reasoning: [`docs/vlan-design.md`](./docs/vlan-desig
 
 - **Remote access:** SSHv2 only on both devices, with Telnet refused. Named accounts (`tech1`, `tech2`) replace a shared login, each device has its own `enable secret`, and the console requires a login. Only the technician laptop may open a management session (`VTY_ADMIN` on the VTY lines).
 - **Inter-VLAN policy:** one inbound ACL per VLAN. Office, POS and guest reach the internet only, and the management VLAN reaches nothing but its own gateway. No other VLAN can reach management addresses, including the manager's PC.
-- **Layer 2:** PortFast and BPDU Guard on access ports. Unused ports are shut down, and unassigned ones are parked in a dead-end VLAN.
+- **Layer 2:** PortFast and BPDU Guard on access ports. Unused ports are shut down, and unassigned ones are parked in a dead-end VLAN. Port security limits each office and POS port to its one known device and binds the maintenance port to the technician laptop's MAC address.
 - **Trunk:** allowed VLANs limited to 10, 20, 30 and 99, native VLAN moved to 998, and DTP negotiation turned off.
 
 Details: [`docs/security-hardening.md`](./docs/security-hardening.md) · [`docs/acl-notes.md`](./docs/acl-notes.md) · [`docs/verification.md`](./docs/verification.md) · [`docs/evidence.md`](./docs/evidence.md)
@@ -93,7 +93,6 @@ The most valuable part came afterwards, when I audited my own work. The network 
 
 See the full list in [`docs/security-hardening.md`](./docs/security-hardening.md#open-items). The main ones:
 
-- [ ] Add Cisco port security (sticky MAC) on access ports, and bind the maintenance port to the technician laptop
 - [ ] Add DHCP snooping and Dynamic ARP Inspection
 - [ ] Finish the ISP side with a default route and NAT
 - [ ] Add a second switch and test EtherChannel and HSRP (as a separate lab)

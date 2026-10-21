@@ -102,7 +102,7 @@ Packet Tracer cannot craft a custom UDP packet, so the old bypass could not be d
 
 ## Known limitations
 
-1. **Administrator access is checked by IP address.** A device plugged into a VLAN 99 port and set to 192.168.99.10 would pass `VTY_ADMIN`. The maintenance port is shut down except during maintenance, which is the main mitigation. Port security, planned next, will also bind that port to the laptop's MAC address.
+1. **Administrator access is checked by IP address.** A device plugged into a VLAN 99 port and set to 192.168.99.10 would pass `VTY_ADMIN`. The maintenance port is shut down except during maintenance, and port security binds it to the laptop's MAC address, so a different device is rejected before the ACL is consulted. A MAC address can still be forged, so this raises the bar rather than removing the risk.
 2. **Devices can still reach the router's own address on their VLAN.** The guest ACL allows traffic to any destination outside the three denied subnets, and that includes 192.168.30.1, the router itself, so a guest can still ping it. SSH sessions from anywhere except the technician laptop are refused by `VTY_ADMIN`.
 3. **The internet-facing side has no ACL yet.** When the ISP interface is configured, it will need its own inbound ACL to block spoofed and unsolicited traffic.
 

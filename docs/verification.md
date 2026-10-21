@@ -57,6 +57,22 @@ Tests written against the old shared `admin` account or the old office-to-manage
 | Guest laptop | same | New address in 192.168.30.x | Pass |
 | Router | `show access-lists` | The DHCP rule in each user-VLAN ACL shows matches | Pass |
 
+## Port security
+
+A temporary PC (the "rogue PC") was used for the two swap tests and removed afterwards.
+
+| Test | Expected | Result |
+|---|---|---|
+| `show port-security` | Fa0/1, Fa0/2, Fa0/6, Fa0/7 (maximum 1, Restrict) and Fa0/15 (maximum 1, Shutdown) listed | Pass |
+| `show port-security address` | Four `SecureSticky` entries on the office and POS ports, and one `SecureConfigured` entry on Fa0/15 | Pass |
+| Ping from each office and POS device, including to the printers | The switch learns each device's MAC as a sticky address | Pass |
+| Regression: DHCP renewal and ordinary pings after enabling port security | Nothing broken | Pass |
+| Rogue PC on a POS port (Fa0/6), set to DHCP | No connectivity; port stays `Secure-up`; violation count above 0 | Pass (count of 6) |
+| POS terminal reconnected to that port | Works again | Pass |
+| Rogue PC on the maintenance port (Fa0/15), with a static VLAN 99 address | No connectivity; port goes to `Secure-shutdown`; violation count 1 | Pass |
+| Recovery: `shutdown`, then `no shutdown`, with the technician laptop reconnected | Laptop works again | Pass |
+| `shutdown` on Fa0/15 when finished | Port disabled again | Pass |
+
 ## Switch hardening: unused ports, timeouts, SSH key, native VLAN
 
 | Test | Expected | Result |

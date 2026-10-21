@@ -17,6 +17,7 @@ This lab was built in two passes. The first pass followed a tutorial and produce
 | 9 | The `enable secret` and the console password were identical on both devices (the hashes matched). The console password was also stored in reversible Type 7. | One compromised password opened both devices. | A unique `enable secret` per device (the hashes now differ); the console uses `login local`, so the shared console password no longer exists |
 | 10 | Administration was allowed from the whole office VLAN, including the manager's daily-use PC. | The most valuable credentials were typed on the machine most exposed to email and browsing, and any office device could attempt a login. | A dedicated technician laptop on a maintenance port in the management VLAN; `VTY_ADMIN` permits only that host; the office-to-management exception removed |
 | 11 | The DHCP permit in each user-VLAN ACL matched any source and any destination. | A crafted packet with UDP ports 68 to 67 could slip past the deny rules beneath it. | Rule narrowed to the DHCP Discover itself, from `0.0.0.0` to `255.255.255.255` |
+| 12 | Any device could be plugged into an active access port and get network access, and the maintenance port was protected only by being shut down and by an IP-address check. | A visitor's device on the POS port would have got a working connection, and a device set to the technician's IP address would have passed `VTY_ADMIN`. | Port security: one sticky MAC on each office and POS port, and the maintenance port bound to the technician laptop's MAC. See below. |
 
 Two lessons from this pass:
 
@@ -48,10 +49,33 @@ Two lessons from this pass:
 - **PortFast** on every access port that connects to an end device. These ports skip the spanning-tree listening and learning delay and come up immediately.
 - **BPDU Guard** on the same ports. A port set up for an end device should never receive a spanning-tree BPDU. If one does, someone has connected a switch, and BPDU Guard puts the port into `err-disabled` instead of letting a stranger influence the topology.
 - **Unused ports** are shut down and, where they have no purpose, moved to VLAN 999 with `switchport mode access`. Three layers cover for each other: `shutdown` turns the port off; VLAN 999 is a dead end if it is re-enabled; and hard-setting access mode stops the port negotiating a trunk with whatever is plugged in.
-- **The maintenance port (Fa0/15)** is an access port in VLAN 99 with PortFast and BPDU Guard, and it is shut down except during maintenance.
+- **The maintenance port (Fa0/15)** is an access port in VLAN 99 with PortFast, BPDU Guard and port security bound to the technician laptop's MAC, and it is shut down except during maintenance.
 - **Trunk hardening:** the trunk to the router is `mode trunk` with `nonegotiate`, an allowed list of only `10,20,30,99`, and native VLAN 998. Nothing legitimate is untagged on this trunk, so a stray untagged frame has nowhere useful to go.
 
-> **A terminology note.** PortFast and BPDU Guard are spanning-tree features. Cisco's feature called "port security" is something different (`switchport port-security`, which limits and tracks the MAC addresses on a port). I have not implemented it yet; it is in the open items.
+### Port security
+
+Port security limits which MAC addresses may send traffic on a port. It only works on a port in static access (or trunk) mode, which is one reason the access ports were hard-set earlier.
+
+| Ports | Setup | Reasoning |
+|---|---|---|
+| Fa0/1-2 (office), Fa0/6-7 (POS) | Sticky MAC, maximum 1, `violation restrict` | Each port has one known device. Sticky learns it and writes it into the config. `restrict` drops frames from a stranger and counts them, but the legitimate device stays online. With `shutdown`, someone plugging a hub in next to the POS terminal could take the POS port down. |
+| Fa0/15 (maintenance) | Static MAC for the technician laptop, maximum 1, `violation shutdown` | This is the highest-value port, so there is no trust-on-first-use. Sticky means the first device to send traffic wins, and a stranger could win during a maintenance window. A MAC address configured by hand cannot be claimed that way. A violation shuts the port, like BPDU Guard does. |
+| Fa0/11 (access point) | None | An access point bridges its wireless clients onto the wire, so the switch sees every guest's MAC on that one port. A limit of 1 would cut guest Wi-Fi when a second customer connected, and sticky would store guest MACs in the config. BPDU Guard stays on this port. |
+| Shut-down and parked ports | None | They are off. When a spare port is enabled for a new device, the same lines are applied then. |
+
+What the tests showed (full output in [`evidence.md`](./evidence.md)):
+
+- **Restrict mode on a POS port:** with an unknown PC plugged in, the port stayed `Secure-up`, the stranger had no connectivity, and the violation counter climbed (6 in my capture).
+- **Shutdown mode on the maintenance port:** with an unknown PC plugged in, the port went to `Secure-shutdown` after 1 violation, and recovery needed a manual `shutdown` followed by `no shutdown`.
+
+Things worth knowing about this feature:
+
+- **Defaults are not printed.** The maintenance port's running-config shows no `violation shutdown` and no `maximum 1`, because both are defaults. `show port-security interface` is what confirms them.
+- **Sticky addresses are only kept across a reload if the config is saved.** Until then, the next device to send traffic would be learned instead.
+- **Replacing a device needs the old address cleared first** (for example with `clear port-security sticky interface <port>`), otherwise the new device is treated as a violation. I have not exercised that procedure in this lab.
+- **A MAC address can be forged.** Port security raises the bar, but it is not strong identity.
+
+> **A terminology note.** PortFast and BPDU Guard are spanning-tree features. Cisco's feature called "port security" is something different (`switchport port-security`), and both are used in this lab.
 
 ## Layer 3 protections
 
@@ -71,17 +95,16 @@ Inter-VLAN filtering is covered in [`acl-notes.md`](./acl-notes.md).
 2. From the technician laptop, SSH to the router or switch with a personal account (`tech1` or `tech2`).
 3. When finished, shut the port again with `shutdown`.
 
-The port is shut by default, so the first barrier is physical presence at the switch. The source-address check and the named account come after it.
+The port is shut by default, so the first barrier is physical presence at the switch. Port security then admits only the laptop's MAC address, `VTY_ADMIN` admits only its IP address, and the named account comes last.
 
 ## Open items
 
 These are known gaps. They are listed rather than hidden.
 
-1. **Cisco port security** (`switchport port-security`, sticky MAC) on the access ports, including binding the maintenance port to the technician laptop's MAC address.
-2. **DHCP snooping and Dynamic ARP Inspection** to protect against rogue DHCP servers and ARP spoofing. The two printers have static addresses, so DAI would need ARP ACLs for them.
-3. **Finish the ISP side:** a default route and NAT on `Gi0/0`, with an inbound ACL on that interface.
-4. **Redundancy:** a second switch with EtherChannel, and HSRP for the gateway. This changes the topology, so it will be a separate lab.
-5. **Centralised authentication** (AAA with RADIUS or TACACS+) instead of local accounts on each device. This is a better answer than maintaining separate passwords everywhere, and it is what real networks use.
+1. **DHCP snooping and Dynamic ARP Inspection** to protect against rogue DHCP servers and ARP spoofing. The two printers have static addresses, so DAI would need ARP ACLs for them.
+2. **Finish the ISP side:** a default route and NAT on `Gi0/0`, with an inbound ACL on that interface.
+3. **Redundancy:** a second switch with EtherChannel, and HSRP for the gateway. This changes the topology, so it will be a separate lab.
+4. **Centralised authentication** (AAA with RADIUS or TACACS+) instead of local accounts on each device. This is a better answer than maintaining separate passwords everywhere, and it is what real networks use.
 
 ## A note on the credentials in this repo
 

@@ -23,12 +23,12 @@ VLANs 998 and 999 have no subnet and no gateway on purpose. Nothing can be route
 
 | Interface(s) | VLAN | State | Connected device(s) |
 |---|---|---|---|
-| Fa0/1 - Fa0/2 | 10 | Up | Manager PC, office printer |
+| Fa0/1 - Fa0/2 | 10 | Up | Manager PC, office printer (port security, sticky MAC) |
 | Fa0/3 - Fa0/5 | 10 | Shut down | Reserved spares |
-| Fa0/6 - Fa0/7 | 20 | Up | POS terminal, receipt printer |
+| Fa0/6 - Fa0/7 | 20 | Up | POS terminal, receipt printer (port security, sticky MAC) |
 | Fa0/8 - Fa0/10 | 20 | Shut down | Reserved spares |
-| Fa0/11 | 30 | Up | Guest Wi-Fi access point |
-| Fa0/15 | 99 | Shut down (enabled only during maintenance) | Technician laptop, 192.168.99.10 |
+| Fa0/11 | 30 | Up | Guest Wi-Fi access point (no port security: it bridges many clients) |
+| Fa0/15 | 99 | Shut down (enabled only during maintenance) | Technician laptop, 192.168.99.10 (port security bound to its MAC) |
 | Fa0/12 - Fa0/14 and Fa0/16 - Fa0/24 | 999 | Shut down | Unassigned |
 | Gi0/1 | Trunk | Up | Uplink to MikesCoffee-R1 (native VLAN 998, allowed 10,20,30,99) |
 | Gi0/2 | 999 | Shut down | Unassigned |
